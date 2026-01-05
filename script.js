@@ -194,3 +194,24 @@ els.chatForm.addEventListener('submit', async (e) => {
     }
 });
 init();
+
+function copyWebhookUrl() {
+    const webhookDisplay = document.getElementById('webhook-display');
+    const textToCopy = webhookDisplay.textContent;
+    
+    navigator.clipboard.writeText(textToCopy).then(function() {
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        button.classList.add('bg-green-600');
+        
+        setTimeout(() => {
+            button.textContent = originalText;
+            button.classList.remove('bg-green-600');
+            button.classList.add('bg-black');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+        alert('Copied!');
+    });
+}
