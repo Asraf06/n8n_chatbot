@@ -1,0 +1,112 @@
+.markdown-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.markdown-body pre {
+    background-color: #0d1117;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    overflow-x: auto;
+    color: #e6edf3;
+}
+
+.markdown-body code {
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.markdown-body :not(pre)>code {
+    background-color: rgba(175, 184, 193, 0.2);
+    padding: 0.2em 0.4em;
+    border-radius: 6px;
+    font-size: 85%;
+}
+
+.markdown-body p {
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body p:last-child {
+    margin-bottom: 0;
+}
+
+.markdown-body ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-body h1 {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+}
+
+.markdown-body h2 {
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+}
+
+.markdown-body h3 {
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+}
+
+.markdown-body a {
+    color: #4f46e5;
+    text-decoration: underline;
+}
+
+.markdown-body blockquote {
+    border-left: 4px solid #e5e7eb;
+    padding-left: 1rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+.markdown-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.markdown-body th,
+.markdown-body td {
+    border: 1px solid #d1d5db;
+    padding: 0.5rem;
+}
+
+.markdown-body th {
+    background-color: #f3f4f6;
+}
+
+.user-message .markdown-body :not(pre)>code {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-message .markdown-body a {
+    color: #c7d2fe;
+}
+
+.user-message .markdown-body table,
+.user-message .markdown-body th,
+.user-message .markdown-body td {
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-message .markdown-body th {
+    background-color: rgba(255, 255, 255, 0.1);
+}
