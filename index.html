@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>n8n AI Messenger</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .markdown-body {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .markdown-body pre {
+            background-color: #0d1117;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            overflow-x: auto;
+            color: #e6edf3;
+        }
+        .markdown-body code {
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .markdown-body :not(pre) > code {
+            background-color: rgba(175, 184, 193, 0.2);
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-size: 85%;
+        }
+        .markdown-body p { margin-bottom: 0.75rem; }
+        .markdown-body p:last-child { margin-bottom: 0; }
+        .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+        .markdown-body h1 { font-size: 1.5em; font-weight: bold; margin-bottom: 0.5rem; margin-top: 1rem; }
+        .markdown-body h2 { font-size: 1.3em; font-weight: bold; margin-bottom: 0.5rem; margin-top: 1rem; }
+        .markdown-body h3 { font-size: 1.1em; font-weight: bold; margin-bottom: 0.5rem; margin-top: 1rem; }
+        .markdown-body a { color: #4f46e5; text-decoration: underline; }
+        .markdown-body blockquote { border-left: 4px solid #e5e7eb; padding-left: 1rem; color: #6b7280; font-style: italic; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+        .markdown-body th, .markdown-body td { border: 1px solid #d1d5db; padding: 0.5rem; }
+        .markdown-body th { background-color: #f3f4f6; }
+        .user-message .markdown-body :not(pre) > code {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        .user-message .markdown-body a { color: #c7d2fe; }
+        .user-message .markdown-body table, .user-message .markdown-body th, .user-message .markdown-body td { border-color: rgba(255,255,255,0.3); }
+        .user-message .markdown-body th { background-color: rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans flex flex-col h-screen text-slate-800">
+    <header class="bg-white border-b px-6 py-4 flex justify-between items-center shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                <i data-lucide="bot" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 leading-none">n8n Messenger</h1>
+                <p id="status-indicator" class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Setup Required
+                </p>
+            </div>
+        </div>
+        <button id="settings-btn" class="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+    </header>
+    <div id="settings-panel" class="hidden bg-indigo-50 border-b p-4 shadow-inner transition-all duration-300">
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="flex flex-col gap-2">
+                <label class="text-sm font-semibold text-indigo-900">n8n Webhook URL</label>
+                <input 
+                    type="text" 
+                    id="webhook-url"
+                    placeholder="https://your-n8n-instance.cloud/webhook/chat-bot"
+                    class="p-2 border rounded-md focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm text-sm w-full"
+                >
+            </div>
+            <div class="flex items-center justify-between bg-white/50 p-3 rounded-md border border-indigo-100">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="bug" class="w-4 h-4 text-indigo-600"></i>
+                    <span class="text-sm font-medium text-slate-700">Debug Mode</span>
+                </div>
+                <button id="debug-toggle" class="w-10 h-5 bg-slate-300 rounded-full relative transition-colors focus:outline-none">
+                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-all duration-200 shadow-sm"></div>
+                </button>
+            </div>
+            <button id="save-settings" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 font-medium transition-colors shadow-sm">
+                Save & Close
+            </button>
+        </div>
+    </div>
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth">
+    </main>
+
+    <footer class="bg-white border-t p-4 pb-6 md:pb-4">
+        <div class="max-w-3xl mx-auto">
+            <form id="chat-form" class="flex items-center gap-2 relative">
+                <input
+                    type="text"
+                    id="chat-input"
+                    placeholder="Type your message..."
+                    class="flex-1 p-4 bg-slate-100 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm border border-transparent transition-all placeholder:text-slate-400"
+                    autocomplete="off"
+                >
+                <button
+                    type="submit"
+                    id="send-btn"
+                    class="p-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md active:scale-95 transition-all flex items-center justify-center"
+                >
+                    <i data-lucide="send" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+    </footer>
+
+    <template id="msg-template-user">
+        <div class="flex items-start gap-4 flex-row-reverse user-message">
+            <div class="p-2 rounded-full flex-shrink-0 bg-indigo-100 text-indigo-600">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </div>
+            <div class="max-w-[85%] md:max-w-[80%] rounded-2xl p-4 shadow-sm bg-indigo-600 text-white rounded-tr-none">
+                <div class="markdown-body text-sm leading-relaxed"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="msg-template-bot">
+        <div class="flex items-start gap-4 bot-message">
+            <div class="p-2 rounded-full flex-shrink-0 bg-slate-200 text-slate-600">
+                <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div class="max-w-[85%] md:max-w-[80%] rounded-2xl p-4 shadow-sm bg-white border border-slate-200 text-slate-800 rounded-tl-none">
+                <div class="markdown-body text-sm leading-relaxed"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="loading-template">
+        <div class="flex items-start gap-4" id="loading-indicator">
+            <div class="p-2 rounded-full bg-slate-200 text-slate-400">
+                <i data-lucide="bot" class="w-5 h-5"></i>
+            </div>
+            <div class="bg-white border p-4 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
+                <div class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 75ms"></div>
+                <div class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="debug-template">
+        <div class="mt-4 border-t border-dashed border-slate-300 pt-4 w-full">
+            <div class="flex items-center gap-2 text-amber-600 mb-2 font-mono text-xs font-bold uppercase">
+                <i data-lucide="bug" class="w-3 h-3"></i> RAW DATA:
+            </div>
+            <pre class="bg-slate-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono border border-slate-700 block whitespace-pre-wrap break-all"></pre>
+        </div>
+    </template>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <script>
+        marked.setOptions({
+            highlight: function(code, lang) {
+                const language = highlight.getLanguage(lang) ? lang : 'plaintext';
+                return highlight.highlight(code, { language }).value;
+            },
+            langPrefix: 'hljs language-',
+            breaks: true,
+            gfm: true  
+        });
+
+        let state = {
+            messages: [{ role: 'assistant', content: "Hi! I'm connected to your n8n workflow. I support **Markdown** and `Code Blocks`!" }],
+            webhookUrl: localStorage.getItem('n8n_webhook_url') || '',
+            debugMode: false,
+            isLoading: false
+        };
+        const els = {
+            chatContainer: document.getElementById('chat-container'),
+            chatForm: document.getElementById('chat-form'),
+            chatInput: document.getElementById('chat-input'),
+            sendBtn: document.getElementById('send-btn'),
+            settingsBtn: document.getElementById('settings-btn'),
+            settingsPanel: document.getElementById('settings-panel'),
+            webhookInput: document.getElementById('webhook-url'),
+            saveSettingsBtn: document.getElementById('save-settings'),
+            statusIndicator: document.getElementById('status-indicator'),
+            debugToggle: document.getElementById('debug-toggle'),
+            templates: {
+                user: document.getElementById('msg-template-user'),
+                bot: document.getElementById('msg-template-bot'),
+                loading: document.getElementById('loading-template'),
+                debug: document.getElementById('debug-template')
+            }
+        };
+
+        function init() {
+            lucide.createIcons();
+            els.webhookInput.value = state.webhookUrl;
+            updateStatusUI();
+            renderMessages();
+        }
+        function updateStatusUI() {
+            const dot = els.statusIndicator.querySelector('span');
+            if (state.webhookUrl) {
+                dot.classList.remove('bg-amber-500');
+                dot.classList.add('bg-green-500');
+                els.statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span> Connected';
+            } else {
+                dot.classList.remove('bg-green-500');
+                dot.classList.add('bg-amber-500');
+                els.statusIndicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Setup Required';
+            }
+        }
+
+        function scrollToBottom() {
+            els.chatContainer.scrollTop = els.chatContainer.scrollHeight;
+        }
+
+        function toggleLoading(show) {
+            const existingLoader = document.getElementById('loading-indicator');
+            if (show && !existingLoader) {
+                const loader = els.templates.loading.content.cloneNode(true);
+                els.chatContainer.appendChild(loader);
+                lucide.createIcons();
+            } else if (!show && existingLoader) {
+                existingLoader.remove();
+            }
+            scrollToBottom();
+            els.sendBtn.disabled = show;
+            els.chatInput.disabled = show;
+            if(!show) els.chatInput.focus();
+        }
+
+        function appendMessage(role, content, rawDebugData = null) {
+            const template = role === 'user' ? els.templates.user : els.templates.bot;
+            const clone = template.content.cloneNode(true);
+            const contentDiv = clone.querySelector('.markdown-body');
+            contentDiv.innerHTML = marked.parse(content);
+            if (state.debugMode && rawDebugData && role === 'assistant') {
+                const debugClone = els.templates.debug.content.cloneNode(true);
+                const pre = debugClone.querySelector('pre');
+                pre.textContent = JSON.stringify(rawDebugData, null, 2);
+                clone.querySelector('.max-w-\\[85\\%\\]').appendChild(debugClone);
+            }
+
+            els.chatContainer.appendChild(clone);
+            lucide.createIcons();
+            scrollToBottom();
+        }
+
+        function renderMessages() {
+            els.chatContainer.innerHTML = ''; 
+            state.messages.forEach(msg => {
+                appendMessage(msg.role, msg.content, msg.rawDebug);
+            });
+        }
+        const findResponseText = (data) => {
+            if (!data) return null;
+            if (typeof data === 'string') return data;
+            if (data.text) return data.text;
+            if (data.output) return data.output;
+            if (data.response) return data.response;
+            if (data.message && data.message !== "Workflow was started") return data.message;
+            
+            if (Array.isArray(data) && data.length > 0) return findResponseText(data[0]);
+            
+            const values = Object.values(data);
+            for (const val of values) {
+                if (typeof val === 'string' && val.length > 2 && val !== "Workflow was started") return val;
+                if (typeof val === 'object' && val !== null) {
+                    const deepMatch = findResponseText(val);
+                    if (deepMatch) return deepMatch;
+                }
+            }
+            return null;
+        };
+        els.settingsBtn.addEventListener('click', () => {
+            els.settingsPanel.classList.toggle('hidden');
+        });
+
+        els.saveSettingsBtn.addEventListener('click', () => {
+            const url = els.webhookInput.value.trim();
+            state.webhookUrl = url;
+            localStorage.setItem('n8n_webhook_url', url);
+            updateStatusUI();
+            els.settingsPanel.classList.add('hidden');
+        });
+
+        els.debugToggle.addEventListener('click', () => {
+            state.debugMode = !state.debugMode;
+            const knob = els.debugToggle.querySelector('div');
+            
+            if (state.debugMode) {
+                els.debugToggle.classList.replace('bg-slate-300', 'bg-indigo-600');
+                knob.style.transform = 'translateX(1.25rem)'; // Move right
+            } else {
+                els.debugToggle.classList.replace('bg-indigo-600', 'bg-slate-300');
+                knob.style.transform = 'translateX(0)';
+            }
+        });
+
+        els.chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = els.chatInput.value.trim();
+            if (!input || state.isLoading) return;
+
+            if (!state.webhookUrl) {
+                els.settingsPanel.classList.remove('hidden');
+                els.webhookInput.focus();
+                return;
+            }
+            state.messages.push({ role: 'user', content: input });
+            appendMessage('user', input);
+            
+            els.chatInput.value = '';
+            state.isLoading = true;
+            toggleLoading(true);
+
+            try {
+                const response = await fetch(state.webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        chatInput: input,
+                        message: input,
+                        sessionId: 'session-' + Math.random().toString(36).substr(2, 9)
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const text = await response.text();
+                let data;
+                try {
+                    data = text ? JSON.parse(text) : {};
+                } catch {
+                    console.warn("Non-JSON response");
+                    data = { text: text || "Empty response" };
+                }
+
+                const botText = findResponseText(data);
+                const finalContent = botText || "Connected, but n8n returned no text. Enable Debug Mode.";
+
+                state.messages.push({ role: 'assistant', content: finalContent, rawDebug: data });
+                appendMessage('assistant', finalContent, data);
+
+            } catch (error) {
+                const errMsg = `Connection Error: ${error.message}`;
+                state.messages.push({ role: 'assistant', content: errMsg });
+                appendMessage('assistant', errMsg);
+            } finally {
+                state.isLoading = false;
+                toggleLoading(false);
+            }
+        });
+        init();
+
+    </script>
+</body>
+</html>
